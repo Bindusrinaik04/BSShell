@@ -15,7 +15,7 @@ void printError(char *);
 void errorExit(char *);
 
 int shellCommand();
-int token(char *, char **, int, int *);
+int tokenize(char *, char **, int, int *);
 char *trim(char *);
 char *rStr(char *);
 
