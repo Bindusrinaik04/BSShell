@@ -1,4 +1,4 @@
-#include "myshell.h"
+ #include "myshell.h"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ DIR *dir = opendir(getenv("HOME"));
 	strcpy(filepath,getenv("HOME"));
 	strcat(filepath,"/path.txt");
 	
-	FILE *fptr = fopen(filePath, "w");
+	FILE *fptr = fopen(filepath, "w");
 
 	fprintf(fptr, "%s ", "./");
 	fprintf(fptr, "%s ", "/bin/");
@@ -40,19 +40,19 @@ DIR *dir = opendir(getenv("HOME"));
 }
 	
 //finding the executables with given path
-int findexecutables(char *name,char *buf){
-	char path[MAX_CWDPATH_SIZE];
+int findExecutable(char *name,char *buf){
+	char paths[MAX_CWDPATH_SIZE];
 	strcpy(paths,getenv("HOME"));
-	strcat(paths,"/paths.txt");
+	strcat(paths,"/path.txt");
 	FILE *ptr=fopen(paths,"r");
-	if(!ptr) errorExit("paths.txt not found\n");
+	if(!ptr) errorExit("path.txt not found\n");
 
 	char curDir[MAX_CWDPATH_SIZE];
 	while(fscanf(ptr,"%s",curDir)!=EOF){
 	DIR *dir =opendir(curDir);
 		if(!dir)
 			errorExit("could not open a directory");
-		struct dirent entry;
+		struct dirent *entry;
 		while(entry=readdir(dir)){
 		if(strcmp(entry->d_name,name)==0)
 		{
@@ -63,7 +63,7 @@ int findexecutables(char *name,char *buf){
 			}
 		}
 		}
-		closdir(dir)
+		closedir(dir);
 		
 	}
 	fclose(ptr);
@@ -76,7 +76,7 @@ void errorExit(char *error)
 	fprintf(stderr, "%s", strerror(errno));
 	exit(-1);
 }
-void printErr(char *message)
+void printError(char *message)
 {
 	fprintf(stderr, "%s", message);
 	fprintf(stderr, "%s", strerror(errno));
@@ -90,7 +90,7 @@ void getprompt(char *promptline){
 	 errorExit("failed to get host name\n");
 	if(getlogin_r(username,MAX_USERNAME_SIZE)<0)
 	 errorExit("failed to get user name\n");
-	 if(getcwd(cwdpath,MAX_CWDPATH_SIZE)<0)
+	 if(getcwd(cwdPath,MAX_CWDPATH_SIZE)<0)
 	 errorExit("failed to get the current working directory path\n");
 	 
 	 fflush(stdout);
@@ -124,27 +124,37 @@ char *trim(char *message)
     return message;
 }
 //for dividing the given input into tokens
-int tokenize(char *usrCommand,char *argv[],int Maxargs,int* argc){
-	*argc =0;
- char *token = strtok(usrCommand, " \t\n");
-while(token !=NULL && *argc < maxArgs) {
-         
-        argv[*argc] = strdup(token);
+ int tokenize(char *usrCommand, char *argv[], int maxargs, int *argc) {
+    *argc = 0;
+    char *token = strtok(usrCommand, " \t\n");
 
-         
+    while (token != NULL && *argc < maxargs) {
+        argv[*argc] = malloc(strlen(token) + 1);
+
+        if (argv[*argc] == NULL) {
+            perror("malloc");
+            // Free previously allocated memory
+            for (int i = 0; i < *argc; i++) {
+                free(argv[i]);
+            }
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(argv[*argc], token);
+
         (*argc)++;
         token = strtok(NULL, " \t\n");
     }
 
-     
     argv[*argc] = NULL;
 
     // Return 0 to indicate successful tokenization
     return 0;
 }
+
 //for reversing the string
 char *rStr(char *str){
-  if(str==NULL) { errorPrint("no string to revers a string\n"); 
+  if(str==NULL) { printError("no string to revers a string\n"); 
 		 return NULL;
 		}
   int length = strlen(str);
@@ -161,12 +171,13 @@ char *rStr(char *str){
 //for handling shell commands
 int handleshellCommand(char *cmd[]){
 	if(strcmp(cmd[0],"exit")==0){
-kill(getppid(),SIGTERM);
-exit(0);
+		kill(getppid(),SIGTERM);
+		exit(0);
 	}
-if(strcmp(cmd[0],"cd")==0){
- chdir(cmd[1]);
- return 0;
+	if (strcmp(cmd[0], "cd") == 0) {
+        chdir(cmd[1]);
+        return 0;     
 }
-fprintf(stderr,"command not found");
+fprintf(stderr,"command not found\n");
 }
+ 
