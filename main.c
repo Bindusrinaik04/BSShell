@@ -1,4 +1,4 @@
-#include <stdio.h>
+ #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -12,7 +12,7 @@
 #include <readline/history.h>
 
 #include "myshell.h"
-int getusrCommand(char *usrCommand,char*remusrCommand,int MAX_STATEMENT_LENGTH)
+int getusrCommand(char *usrCommand,char*remusrCommand,int max)
 {
       char *prompt=(char*)malloc(sizeof(char)*(MAX_CWDPATH_SIZE + MAX_USERNAME_SIZE+MAX_HOSTNAME_SIZE+2));
       getprompt(prompt);
@@ -22,8 +22,8 @@ int getusrCommand(char *usrCommand,char*remusrCommand,int MAX_STATEMENT_LENGTH)
       trim(input);
       add_history(input);
       int inputlen=strlen(input);
-      int i=0j=inputlen-1;
-      while(j>=0 && input[j]!="|")
+      int i=0,j=inputlen-1;
+      while(j>=0 && strcmp(&input[j], "|") != 0)
         { usrCommand[i++]=input[j--];}
       switch(input[j]){
         case '|' :code=1;break; 
@@ -50,17 +50,20 @@ void runCommand(char *executablePath,int argc,char *argv[])
 
 void getstmt()
 {
-  char usrCommand[MAX_STATEMENT_LENGH]; //primary user command
+  char usrCommand[MAX_STATEMENT_LENGTH]; //primary user command
   char remusrCommand[MAX_STATEMENT_LENGTH]; //if there are any options ex:ls -l -a ,ls is primary command,-l -a are stored in remusrCommand 
+  
   int p=getusrCommand(usrCommand,remusrCommand,MAX_STATEMENT_LENGTH);//p is used here to indicate whether pipe is present or not
   if(strlen(usrCommand)==0) return ; //if usrCommand length = 0 return meaning the usr did not give any primary input command so return
   char* argv[MAX_STATEMENT_LENGTH];
   int count=0;
-  tokenize(usrCommand,argv,MAX_STATEMENT_LENGTH,count);
+  tokenize(usrCommand,argv,MAX_STATEMENT_LENGTH,&count);
       //find the executables of the user command
       char executablePath[MAX_CWDPATH_SIZE];
       int executableE=findExecutable(argv[0],executablePath);
-      if(executableE <0){
+      printf("Debug: argv[0] = %s\n", argv[0]);
+
+      if(executableE < 0){
       //means the command might not be past of our list :ls,ps,so handle it as shell command
             handleshellCommand(argv);
       }
@@ -95,12 +98,12 @@ void getstmt()
                       if(child2==0)
                       {
                             //its output goes to mainpipe
-					close(mainPipe[0]);
-					dup2(mainPipe[1], 1);
+					close(mainpipe[0]);
+					dup2(mainpipe[1], 1);
 				
 					//it reads the input from the command pipe.
-					close(commandPipe[1]);
-					dup2(commandPipe[0], 0);
+					close(commandpipe[1]);
+					dup2(commandpipe[0], 0);
 
 					getstmt();
 					exit(0);
@@ -113,14 +116,14 @@ void getstmt()
                             close(commandpipe[0]);
                             write(commandpipe[1],remusrCommand,strlen(remusrCommand));
 
-                            runCommand(executablepath,argc,argv);
+                            runCommand(executablePath,count,argv);
                             exit(0);
                       }
                 }
                       
                 else
 			{
-				runCommand(executableDirPath, argc, argv);
+				runCommand(executablePath, count, argv);
 				exit(0);
 			}
 		}
@@ -139,5 +142,4 @@ getstmt();
 }
 return 0;
 }
-
 
