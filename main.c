@@ -38,7 +38,8 @@ int getusrCommand(char *usrCommand,char*remusrCommand,int MAX_STATEMENT_LENGTH)
       free(prompt);
       return code;
 }
-     
+
+void runusrCommand(char *executablePath,int argc,char *argv[]){
   
 }
 
@@ -50,6 +51,23 @@ void getstmt(){
   char* argv[MAX_STATEMENT_LENGTH];
   int count=0;
   tokenize(usrCommand,argv,MAX_STATEMENT_LENGTH,count);
+      //find the executables of the user command
+      char executablePath[MAX_CWDPATH_SIZE];
+      int executableE=findExecutable(argv[0],executablePath);
+      if(executableE <0){
+      //means the command might not be past of our list :ls,ps,so handle it as shell command
+            handleshellCommand(argv);
+      }
+      else{
+            //it is from the list of commands we are executing as part of this assignment
+            pid_t child1;
+            child1=fork();
+            if(child1<0){
+                  printError("fork failed\n");
+                  return;
+            }
+            if(child1==0){
+                  
   
 }
 
