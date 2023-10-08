@@ -95,5 +95,22 @@ char *trim(char *message)
     return message;
 }
 
-int tokenize(char *usrCommand,char *argv,
+int tokenize(char *usrCommand,char *argv[],int Maxargs,int* argc){
+	*argc =0;
+ char *token = strtok(usrCommand, " \t\n");
+while(token !=NULL && *argc < maxArgs) {
+         
+        argv[*argc] = strdup(token);
+
+         
+        (*argc)++;
+        token = strtok(NULL, " \t\n");
+    }
+
+     
+    argv[*argc] = NULL;
+
+    // Return 0 to indicate successful tokenization
+    return 0;
+}
 
