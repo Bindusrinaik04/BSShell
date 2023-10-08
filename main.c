@@ -12,6 +12,35 @@
 #include <readline/history.h>
 
 #include "myshell.h"
+int getusrCommand(char *usrCommand,char*remusrCommand,int MAX_STATEMENT_LENGTH)
+{
+      char *prompt=(char*)malloc(sizeof(char)*(MAX_CWDPATH_SIZE + MAX_USERNAME_SIZE+MAX_HOSTNAME_SIZE+2));
+      getprompt(prompt);
+      char *input=readline(prompt);
+      int code=0;
+      if(!input) exit(-1); //if there was EOF
+      trim(input);
+      add_history(input);
+      int inputlen=strlen(input);
+      int i=0j=inputlen-1;
+      while(j>=0 && input[j]!="|")
+        { usrCommand[i++]=input[j--];}
+      switch(input[j]){
+        case '|' :code=1;break; 
+        default :break;
+      }
+      usrCommand[i]='\0';
+      input[j]='\0';
+      trim(usrCommand);
+      rStr(usrCommand);
+      strcpy(remusrCommand,input);
+      trim(remusrCommand);
+      free(prompt);
+      return code;
+}
+     
+  
+}
 
 void getstmt(){
   char usrCommand[MAX_STATEMENT_LENGH]; //primary user command
