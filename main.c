@@ -39,11 +39,17 @@ int getusrCommand(char *usrCommand,char*remusrCommand,int MAX_STATEMENT_LENGTH)
       return code;
 }
 
-void runusrCommand(char *executablePath,int argc,char *argv[]){
-  
+void runCommand(char *executablePath,int argc,char *argv[])
+{
+  char pathName[MAX_CWDPATH_SIZE];
+      sprintf(pathName,"%s/%s",executablePath, argv[0]);
+      int r=execv(pathName,argv);
+      if(r<0)
+            errorExit("failed to execute command\n");
 }
 
-void getstmt(){
+void getstmt()
+{
   char usrCommand[MAX_STATEMENT_LENGH]; //primary user command
   char remusrCommand[MAX_STATEMENT_LENGTH]; //if there are any options ex:ls -l -a ,ls is primary command,-l -a are stored in remusrCommand 
   int p=getusrCommand(usrCommand,remusrCommand,MAX_STATEMENT_LENGTH);//p is used here to indicate whether pipe is present or not
@@ -59,7 +65,7 @@ void getstmt(){
             handleshellCommand(argv);
       }
       else{
-            //it is from the list of commands we are executing as part of this assignment
+            //it is from the list of commands we are executing as part of this assignment:ls,ps
             pid_t child1;
             child1=fork();
             if(child1<0){
@@ -67,10 +73,64 @@ void getstmt(){
                   return;
             }
             if(child1==0){
-                  
-  
-}
+                if(p==1) //there is need for inter process communication 
+                {
+                int mainpipe[2]; //used to send the output from child to parent
+                      int commandpipe[2];//used to send the remaining command to the child from parent
+                if(pipe(mainpipe)<0) {
+                      printError("pipe failed\n");
+                      return;
+                }
+                      if(pipe(commandpipe)<0)
+                      {
+                            printError("pipe failed\n");
+                            return;
+                      }
+                      pid_t child2;
+                      if((child2=fork())<0)
+                      {
+                            printError("fork failed\n");
+                            return;
+                      }
+                      if(child2==0)
+                      {
+                            //its output goes to mainpipe
+					close(mainPipe[0]);
+					dup2(mainPipe[1], 1);
+				
+					//it reads the input from the command pipe.
+					close(commandPipe[1]);
+					dup2(commandPipe[0], 0);
 
+					getstmt();
+					exit(0);
+				}
+                      else{
+                            //child1 after forking child2
+                            close(mainpipe[1]);
+                            dup2(mainpipe[0],0);
+                            //write remaining command to command pipe
+                            close(commandpipe[0]);
+                            write(commandpipe[1],remusrCommand,strlen(remusrCommand));
+
+                            runCommand(executablepath,argc,argv);
+                            exit(0);
+                      }
+                }
+                      
+                else
+			{
+				runCommand(executableDirPath, argc, argv);
+				exit(0);
+			}
+		}
+		else
+		{
+			//root shell waits for child to finish.
+			wait(NULL);
+		}
+	}
+}
 int main(char* argc,char* argv[]){
 initpath();
 
