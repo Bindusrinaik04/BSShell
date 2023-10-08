@@ -95,5 +95,5 @@ char *trim(char *message)
     return message;
 }
 
-int token(
+int tokenize(char *usrCommand,char *argv,
 
