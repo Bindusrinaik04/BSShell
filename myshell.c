@@ -39,6 +39,35 @@ DIR *dir = opendir(getenv("HOME"));
 	fclose(fptr);
 }
 	
+//finding the executables with given path
+int findexecutables(char *name,char *buf){
+	char path[MAX_CWDPATH_SIZE];
+	strcpy(paths,getenv("HOME"));
+	strcat(paths,"/paths.txt");
+	FILE *ptr=fopen(paths,"r");
+	if(!ptr) errorExit("paths.txt not found\n");
+
+	char curDir[MAX_CWDPATH_SIZE];
+	while(fscanf(ptr,"%s",curDir)!=EOF){
+	DIR *dir =opendir(curDir);
+		if(!dir)
+			errorExit("could not open a directory");
+		struct dirent entry;
+		while(entry=readdir(dir)){
+		if(strcmp(entry->d_name,name)==0)
+		{
+			if(entry->d_type !=DT_DIR)
+			{
+				strcpy(buf,curDir);
+				return 0;
+			}
+		}
+		}
+		closdir(dir)
+		
+	}
+	fclose(ptr);
+	return -1;
 }
 
 void errorExit(char *error)
@@ -68,7 +97,7 @@ void getprompt(char *promptline){
 	 sprintf(promptline, "\033[1;33m%s@%s:%s$\033[0m ", username, hostname, cwdPath);
 
 }
-
+//for removing the spaces either from starting or from the ending of the message
 char *trim(char *message)
 {
     // Find the start and end of the non-whitespace characters
@@ -94,7 +123,7 @@ char *trim(char *message)
 
     return message;
 }
-
+//for dividing the given input into tokens
 int tokenize(char *usrCommand,char *argv[],int Maxargs,int* argc){
 	*argc =0;
  char *token = strtok(usrCommand, " \t\n");
@@ -113,4 +142,31 @@ while(token !=NULL && *argc < maxArgs) {
     // Return 0 to indicate successful tokenization
     return 0;
 }
-
+//for reversing the string
+char *rStr(char *str){
+  if(str==NULL) { errorPrint("no string to revers a string\n"); 
+		 return NULL;
+		}
+  int length = strlen(str);
+	if(length <= 1) {
+		return str;
+	}
+	for(int left=0,right = length-1 ;left < right;left++,right--){
+	 char temp=str[left];
+		str[left]=str[right];
+		str[right]=temp;
+	}
+		 return str;
+}
+//for handling shell commands
+int handleshellCommand(char *cmd[]){
+	if(strcmp(cmd[0],"exit")==0){
+kill(getppid(),SIGTERM);
+exit(0);
+	}
+if(strcmp(cmd[0],"cd")==0){
+ chdir(cmd[1]);
+ return 0;
+}
+fprintf(stderr,"command not found");
+}
