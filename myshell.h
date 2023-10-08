@@ -14,10 +14,10 @@ void getprompt(char *);
 void printError(char *);
 void errorExit(char *);
 
-int shellCommand();
+int handleshellCommand(char *[]);
 int tokenize(char *, char **, int, int *);
 char *trim(char *);
 char *rStr(char *);
-
+int findExecutable(char *,char *);
 #endif
 
