@@ -169,12 +169,14 @@ char *rStr(char *str){
 		 return str;
 }
 //for handling shell commands
-int handleshellCommand(char *cmd[]){
+ int handleshellCommand(char *cmd[]){
 	if(strcmp(cmd[0],"exit")==0){
+	printf("exiting from Bindu's Shell\n");
 		kill(getppid(),SIGTERM);
 		exit(0);
 	}
 	if (strcmp(cmd[0], "cd") == 0) {
+	printf("executing actual cd shell command\n");
         chdir(cmd[1]);
         return 0;     
 }
