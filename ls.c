@@ -1,4 +1,4 @@
- #include <stdio.h>
+  #include <stdio.h>
 #include<stdlib.h>
 #include<dirent.h>
 #include "myshell.h"
@@ -10,7 +10,7 @@
 #include<string.h>
 
 
-void print_entry(const char*entry_name,int show_hidden,int long_format){
+void print_entry(const char*entry_name,int show_hidden){
 struct stat entry_stat;
 if(stat(entry_name,&entry_stat)==-1){
 perror("stat error\n");
@@ -22,9 +22,10 @@ return;
 printf("%s \n",entry_name);
   
 }
+
 void print_help(int help_form){
 if(help_form){
- printf("usage of ls command: listing the directories\n syntax : ls -options directory path\n -a :shows hidden files and directories \n-l:displays the information in long format\n-h displays the help info\n");
+ printf("usage of ls command: listing the directories\n syntax : ls -options directory path\n -a :shows hidden files and directories \n- -h displays the help info\n");
  }
  }
 
@@ -40,8 +41,10 @@ for(int i=1;i<argc;i++){
 if(argv[i][0]=='-'){
 if(argv[i][1]=='a') show_hidden =1;
  
-else if(argv[i][1]=='h') print_help(help_form++);
-else printf("use valid options for ls (i.e,-a,-l,-la)\n");
+else if(argv[i][1]=='h') { help_form++;print_help(help_form); return 0; }
+else { printf("use valid options for ls (i.e,-a,-h)\n");
+       return 1;
+       }
 
 }
 else {
@@ -57,7 +60,7 @@ return 1;
 
 struct dirent *entry;
 while((entry=readdir(directory))!=NULL){
-print_entry(entry->d_name,show_hidden,long_format);
+print_entry(entry->d_name,show_hidden);
 }
 
 closedir(directory);
