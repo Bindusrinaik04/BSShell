@@ -23,12 +23,17 @@ int getusrCommand(char *usrCommand,char*remusrCommand,int max)
       add_history(input);
       int inputlen=strlen(input);
       int i=0,j=inputlen-1;
-      while(j>=0 && strcmp(&input[j], "|") != 0)
-        { usrCommand[i++]=input[j--];}
-      switch(input[j]){
+      
+      while(j>=0 && input[j] !='|')
+        { 
+        usrCommand[i++]=input[j--];
+        }
+      switch(input[j])
+      {
         case '|' :code=1;break; 
         default :break;
       }
+      
       usrCommand[i]='\0';
       input[j]='\0';
       trim(usrCommand);
@@ -41,6 +46,7 @@ int getusrCommand(char *usrCommand,char*remusrCommand,int max)
 
 void runCommand(char *executablePath,int argc,char *argv[])
 {
+  redirection(&argc,argv);
   char pathName[MAX_CWDPATH_SIZE];
       sprintf(pathName,"%s/%s",executablePath, argv[0]);
       int r=execv(pathName,argv);
@@ -56,45 +62,51 @@ void getstmt()
   int p=getusrCommand(usrCommand,remusrCommand,MAX_STATEMENT_LENGTH);//p is used here to indicate whether pipe is present or not
   if(strlen(usrCommand)==0) return ; //if usrCommand length = 0 return meaning the usr did not give any primary input command so return
   char* argv[MAX_STATEMENT_LENGTH];
-  int count=0;
-  tokenize(usrCommand,argv,MAX_STATEMENT_LENGTH,&count);
+  int argc=0;
+  tokenize(usrCommand,argv,MAX_STATEMENT_LENGTH,&argc);
       //find the executables of the user command
       char executablePath[MAX_CWDPATH_SIZE];
       int executableE=findExecutable(argv[0],executablePath);
       printf("Debug: argv[0] = %s\n", argv[0]);
 
       if(executableE < 0){
-      //means the command might not be past of our list :ls,ps,so handle it as shell command
+      //means the command might not be past of our list :ls,ps,cdir,echo,wc,mkdir,so handle it as shell command
             handleshellCommand(argv);
       }
       else{
-            //it is from the list of commands we are executing as part of this assignment:ls,ps
+            //it is from the list of commands we are executing as part of this assignment:ls,ps,wc,cdir,echo,mkdir
             pid_t child1;
+            
             child1=fork();
+            
             if(child1<0){
                   printError("fork failed\n");
                   return;
             }
+            
             if(child1==0){
                 if(p==1) //there is need for inter process communication 
                 {
-                int mainpipe[2]; //used to send the output from child to parent
+                      int mainpipe[2]; //used to send the output from child to parent
                       int commandpipe[2];//used to send the remaining command to the child from parent
-                if(pipe(mainpipe)<0) {
+                
+                if(pipe(mainpipe) < 0) {
                       printError("pipe failed\n");
                       return;
                 }
-                      if(pipe(commandpipe)<0)
+                      if(pipe(commandpipe) < 0)
                       {
                             printError("pipe failed\n");
                             return;
                       }
+                      
                       pid_t child2;
                       if((child2=fork())<0)
                       {
                             printError("fork failed\n");
                             return;
                       }
+                      
                       if(child2==0)
                       {
                             //its output goes to mainpipe
@@ -116,14 +128,14 @@ void getstmt()
                             close(commandpipe[0]);
                             write(commandpipe[1],remusrCommand,strlen(remusrCommand));
 
-                            runCommand(executablePath,count,argv);
+                            runCommand(executablePath,argc,argv);
                             exit(0);
                       }
                 }
                       
                 else
 			{
-				runCommand(executablePath, count, argv);
+				runCommand(executablePath, argc, argv);
 				exit(0);
 			}
 		}

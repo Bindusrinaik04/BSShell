@@ -12,7 +12,7 @@ void initpath();
 void getprompt(char *);
 void printError(char *);
 void errorExit(char *);
-
+void redirection(int *,char* []);
 int handleshellCommand(char *[]);
 int tokenize(char *, char **, int, int *);
 char *trim(char *);

@@ -10,6 +10,35 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+void redirection(int *argc,char *argv[]){
+int j=0;
+for(int i=0;i<*argc;i++){
+if(strcmp(argv[i],"<")==0 || strcmp(argv[i],">")==0){
+if(i+1 <*argc && argv[i+1]!=NULL){
+int mode=(strcmp(argv[i],"<")==0)?O_RDONLY:(O_CREAT|O_WRONLY);
+int fd=open(argv[i+1],mode,S_IRWXU | S_IRWXG | S_IRWXO);
+if(fd<0){
+fprintf(stderr,"No such file:%s\n",argv[i+1]);
+exit(1);
+}
+else{
+dup2(fd,(strcmp(argv[i],"<")==0)?0:1);
+close(fd);
+i++;
+}
+}
+else{
+fprintf(stderr,"No file specified for redirection");
+exit(1);
+}
+
+}else{
+argv[j++]=argv[i];
+}
+}
+argv[j]=NULL;
+*argc=j;
+}
 void initpath(){
 
 DIR *dir = opendir(getenv("HOME"));
@@ -169,7 +198,7 @@ char *rStr(char *str){
 		 return str;
 }
 //for handling shell commands
- int handleshellCommand(char *cmd[]){
+int handleshellCommand(char *cmd[]){
 	if(strcmp(cmd[0],"exit")==0){
 	printf("exiting from Bindu's Shell\n");
 		kill(getppid(),SIGTERM);
