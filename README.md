@@ -1,4 +1,4 @@
-# BSShell - A Basic Linux Command Executor
+# Shell - A Basic Linux Command Executor
 Shell - A Basic Linux Command Executor
 This repository contains a simple shell implementation that executes basic Linux commands. The shell supports the following commands:
 
